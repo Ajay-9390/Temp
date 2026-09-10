@@ -1,0 +1,11 @@
+spring:
+  cache:
+    type: simple            # in-memory cache for local dev without Redis
+app:
+  security:
+    enabled: false          # no Keycloak needed for local dev
+  seed:
+    enabled: true           # load fictional seed data
+logging:
+  level:
+    com.example.nba: DEBUG

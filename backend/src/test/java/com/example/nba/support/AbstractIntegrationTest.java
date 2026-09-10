@@ -1,0 +1,42 @@
+package com.example.nba.support;
+
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+/**
+ * Base for integration tests. Boots the full application against a real PostgreSQL
+ * (Testcontainers) so Flyway migrations + Envers are exercised end-to-end.
+ *
+ * <p>{@code disabledWithoutDocker = true} means these tests are automatically <b>skipped</b>
+ * (not failed) on machines without a running Docker daemon, and run normally in CI/dev where
+ * Docker is available. Security is disabled and the dev seed is off for deterministic runs.</p>
+ */
+@Testcontainers(disabledWithoutDocker = true)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+public abstract class AbstractIntegrationTest {
+
+    @Container
+    static final PostgreSQLContainer<?> POSTGRES =
+            new PostgreSQLContainer<>("postgres:16-alpine")
+                    .withDatabaseName("nba_program_test")
+                    .withUsername("test")
+                    .withPassword("test");
+
+    @DynamicPropertySource
+    static void properties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("spring.cache.type", () -> "simple");
+        registry.add("app.security.enabled", () -> "false");
+        registry.add("app.seed.enabled", () -> "false");
+    }
+}

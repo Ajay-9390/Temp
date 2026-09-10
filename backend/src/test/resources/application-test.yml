@@ -1,0 +1,15 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  cache:
+    type: simple
+app:
+  security:
+    enabled: false
+  seed:
+    enabled: false
+logging:
+  level:
+    org.testcontainers: INFO
+    com.example.nba: INFO
