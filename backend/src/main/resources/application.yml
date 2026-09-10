@@ -1,0 +1,94 @@
+spring:
+  application:
+    name: nba-evidence-management
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/accreditation}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    hikari:
+      pool-name: evidence-pool
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway is the single source of truth for the schema, so 'none' guarantees a clean
+      # boot. Set DDL_AUTO=validate in a dev environment to check entity/migration drift.
+      ddl-auto: ${DDL_AUTO:none}
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+        # Hibernate Envers is dependency-ready and entities are @Audited, but disabled by
+        # default so a plain 'validate' boot does not require the _aud tables. Enable with
+        # ENVERS_ENABLED=true after generating the Envers audit tables (see docs/INTEGRATION.md).
+        integration:
+          envers:
+            enabled: ${ENVERS_ENABLED:false}
+    show-sql: ${JPA_SHOW_SQL:false}
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${MAX_FILE_SIZE:52428800}      # 50 MB
+      max-request-size: ${MAX_REQUEST_SIZE:52428800}
+
+  # Cache is 'none' by default so core operations never require Redis.
+  # Set CACHE_TYPE=redis (and provide REDIS_HOST/REDIS_PORT) to enable statistics caching.
+  cache:
+    type: ${CACHE_TYPE:none}
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# ------------------------------------------------------------------
+# Evidence Management module configuration (com.accreditation.nba.evidence)
+# ------------------------------------------------------------------
+evidence:
+  storage:
+    # provider: local | supabase
+    provider: ${STORAGE_PROVIDER:local}
+    root-prefix: nba-evidence
+    local:
+      base-path: ${STORAGE_LOCAL_BASE_PATH:./data/evidence-store}
+    supabase:
+      url: ${SUPABASE_URL:}
+      bucket: ${SUPABASE_BUCKET:nba-evidence}
+      service-key: ${SUPABASE_SERVICE_KEY:}
+      signed-url-ttl-seconds: ${SUPABASE_SIGNED_URL_TTL:3600}
+  validation:
+    max-file-size-bytes: ${MAX_FILE_SIZE:52428800}
+    allowed-extensions: pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,csv
+  ocr:
+    enabled: ${OCR_ENABLED:false}
+    tessdata-path: ${TESSDATA_PATH:}
+    languages: ${OCR_LANGUAGES:eng}
+  ai:
+    enabled: ${AI_ENABLED:false}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    com.accreditation.nba.evidence: ${LOG_LEVEL:INFO}

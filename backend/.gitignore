@@ -1,0 +1,7 @@
+target/
+data/
+*.log
+.idea/
+.vscode/
+*.iml
+# Keep the Maven wrapper committed (mvnw, mvnw.cmd, .mvn/)

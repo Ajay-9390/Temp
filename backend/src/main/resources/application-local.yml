@@ -1,0 +1,19 @@
+# Local development profile: run with -Dspring.profiles.active=local
+# Uses local filesystem storage and verbose SQL. No external services required.
+spring:
+  jpa:
+    show-sql: true
+  cache:
+    type: none
+
+evidence:
+  storage:
+    provider: local
+    local:
+      base-path: ./data/evidence-store
+  ocr:
+    enabled: false
+
+logging:
+  level:
+    com.accreditation.nba.evidence: DEBUG

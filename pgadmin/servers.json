@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Evidence Postgres",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "accreditation",
+      "Username": "postgres",
+      "SSLMode": "prefer"
+    }
+  }
+}

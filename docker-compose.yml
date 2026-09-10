@@ -1,0 +1,98 @@
+# NBA Evidence Management — local/dev stack.
+# Brings up PostgreSQL, Redis, the Spring Boot backend and the Next.js frontend.
+# Copy .env.example to .env first. Never commit real credentials.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: evidence-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-accreditation}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-accreditation}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: evidence-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: evidence-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-accreditation}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # Optional Redis-backed statistics cache
+      CACHE_TYPE: ${CACHE_TYPE:-redis}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # Storage: local (default) or supabase
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+      STORAGE_LOCAL_BASE_PATH: /app/data/evidence-store
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_BUCKET: ${SUPABASE_BUCKET:-nba-evidence}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY:-}
+      # OCR (Tesseract) is disabled by default; requires tesseract in the image
+      OCR_ENABLED: ${OCR_ENABLED:-false}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - evidence_store:/app/data/evidence-store
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: evidence-frontend
+    depends_on:
+      - backend
+    environment:
+      BACKEND_INTERNAL_URL: http://backend:8080
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+
+  # Web-based PostgreSQL admin UI. Open http://localhost:5050 and log in with
+  # PGADMIN_EMAIL / PGADMIN_PASSWORD. The "Evidence Postgres" server is pre-registered
+  # (host: postgres, db: accreditation); enter the DB password when prompted.
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: evidence-pgadmin
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@evidence.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-pgadmin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_CONFIG_CHECK_EMAIL_DELIVERABILITY: "False"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+
+volumes:
+  pgdata:
+  evidence_store:
+  pgadmin_data:
