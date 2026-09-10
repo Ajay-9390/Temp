@@ -1,0 +1,26 @@
+spring:
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+# Use mock providers during integration tests
+  profiles:
+    active: default
+
+logging:
+  level:
+    com.nba.attainment: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+
+attainment:
+  calculation:
+    default-method: WEIGHTED
+    default-version: "v1"
+  thresholds:
+    excellent: 75.0
+    good: 60.0
+    needs-improvement: 0.0
