@@ -1,0 +1,77 @@
+#!/bin/sh
+# ----------------------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# Apache Maven Wrapper startup script, version 3.3.2
+# ----------------------------------------------------------------------------
+
+# If JAVA_HOME is not set, try to infer it from the java command
+if [ -z "$JAVA_HOME" ]; then
+  JAVA_PATH=$(which java 2>/dev/null)
+  if [ -n "$JAVA_PATH" ]; then
+    JAVA_HOME=$(dirname $(dirname $(readlink -f "$JAVA_PATH")))
+  fi
+fi
+
+# Find the maven wrapper jar
+MAVEN_WRAPPER_JAR=".mvn/wrapper/maven-wrapper.jar"
+MAVEN_WRAPPER_PROPERTIES=".mvn/wrapper/maven-wrapper.properties"
+
+# Read the distribution URL from the properties file
+if [ -f "$MAVEN_WRAPPER_PROPERTIES" ]; then
+  DISTRIBUTION_URL=$(grep 'distributionUrl' "$MAVEN_WRAPPER_PROPERTIES" | sed 's/distributionUrl=//')
+fi
+
+# Download Maven if not cached
+MAVEN_USER_HOME="${MAVEN_USER_HOME:-$HOME/.m2}"
+MAVEN_CACHE_DIR="$MAVEN_USER_HOME/wrapper/dists"
+
+# Derive version from URL
+MAVEN_VERSION=$(echo "$DISTRIBUTION_URL" | grep -oP 'apache-maven-\K[0-9]+\.[0-9]+\.[0-9]+' || echo "3.9.8")
+MAVEN_HOME="$MAVEN_CACHE_DIR/apache-maven-$MAVEN_VERSION"
+
+if [ ! -d "$MAVEN_HOME" ]; then
+  mkdir -p "$MAVEN_CACHE_DIR"
+  TMP_DOWNLOAD="/tmp/maven-download-$$.zip"
+  echo "Downloading Maven $MAVEN_VERSION..."
+  if command -v curl > /dev/null 2>&1; then
+    curl -fsSL "$DISTRIBUTION_URL" -o "$TMP_DOWNLOAD"
+  elif command -v wget > /dev/null 2>&1; then
+    wget -q "$DISTRIBUTION_URL" -O "$TMP_DOWNLOAD"
+  else
+    echo "ERROR: Neither curl nor wget found. Cannot download Maven." >&2
+    exit 1
+  fi
+  unzip -q "$TMP_DOWNLOAD" -d "$MAVEN_CACHE_DIR"
+  rm -f "$TMP_DOWNLOAD"
+fi
+
+MAVEN_BIN="$MAVEN_HOME/bin/mvn"
+if [ ! -f "$MAVEN_BIN" ]; then
+  # Try the directory without version suffix (some archives unzip differently)
+  MAVEN_BIN=$(find "$MAVEN_CACHE_DIR" -name "mvn" -type f 2>/dev/null | head -1)
+fi
+
+if [ -z "$MAVEN_BIN" ] || [ ! -f "$MAVEN_BIN" ]; then
+  echo "ERROR: Could not find mvn binary in $MAVEN_CACHE_DIR" >&2
+  exit 1
+fi
+
+exec "$MAVEN_BIN" "$@"

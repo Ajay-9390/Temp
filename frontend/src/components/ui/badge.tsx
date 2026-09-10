@@ -1,32 +1,32 @@
 import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import type { AttainmentStatus } from "@/lib/api/types";
 
-const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors",
-  {
-    variants: {
-      variant: {
-        default: "border-transparent bg-primary text-primary-foreground",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
-        destructive: "border-transparent bg-destructive text-destructive-foreground",
-        outline: "text-foreground",
-        success: "border-transparent bg-green-100 text-green-800",
-        warning: "border-transparent bg-amber-100 text-amber-800",
-        info: "border-transparent bg-blue-100 text-blue-800",
-        muted: "border-transparent bg-muted text-muted-foreground",
-      },
-    },
-    defaultVariants: { variant: "default" },
-  },
-);
-
-export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
-
-function Badge({ className, variant, ...props }: BadgeProps) {
-  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
+interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  variant?: "default" | "success" | "info" | "warning" | "destructive";
 }
 
-export { Badge, badgeVariants };
+export function Badge({ className, variant = "default", ...props }: BadgeProps) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+        variant === "default"     && "bg-gray-100 text-gray-700",
+        variant === "success"     && "bg-green-100 text-green-700",
+        variant === "info"        && "bg-blue-100 text-blue-700",
+        variant === "warning"     && "bg-amber-100 text-amber-700",
+        variant === "destructive" && "bg-red-100 text-red-700",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function StatusBadge({ status }: { status: AttainmentStatus | string }) {
+  const variant =
+    status === "Excellent" ? "success" :
+    status === "Good" ? "info" :
+    status === "Needs Improvement" ? "warning" : "default";
+  return <Badge variant={variant}>{status}</Badge>;
+}

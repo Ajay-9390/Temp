@@ -1,33 +1,26 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { GraduationCap } from "lucide-react";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { NavBar } from "@/components/layout/NavBar";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "NBA Program Management",
-  description: "Manage institutions, departments, programs and accreditation context",
+  title: "PO/PSO Attainment | NBA Module 09",
+  description: "Program Outcome and Program Specific Outcome Attainment Dashboard",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body className={inter.className}>
         <Providers>
-          <div className="min-h-screen bg-muted/30">
-            <header className="border-b bg-background">
-              <div className="container flex h-16 items-center justify-between">
-                <Link href="/programs" className="flex items-center gap-2 font-semibold">
-                  <GraduationCap className="h-6 w-6" />
-                  <span>NBA Program Management</span>
-                </Link>
-                <nav className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
-                  <Link href="/programs" className="hover:text-foreground">Programs</Link>
-                  <Link href="/departments" className="hover:text-foreground">Departments</Link>
-                </nav>
-              </div>
-            </header>
-            <main className="container py-8">{children}</main>
+          <div className="min-h-screen bg-background">
+            <NavBar />
+            <main className="container mx-auto px-4 py-6 max-w-7xl">
+              {children}
+            </main>
           </div>
         </Providers>
       </body>

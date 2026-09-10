@@ -1,29 +1,30 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
-import { ApiClientError } from "@/lib/api/client";
 
-/** Wraps the app in a TanStack Query client. Auth (401/403) and validation (422) errors are
- *  not retried; transient errors are retried once. */
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [client] = useState(
+  const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
+            retry: 1,
             staleTime: 30_000,
-            retry: (failureCount, error) => {
-              if (error instanceof ApiClientError && [400, 401, 403, 404, 422].includes(error.status)) {
-                return false;
-              }
-              return failureCount < 1;
-            },
+            refetchOnWindowFocus: false,
           },
-          mutations: { retry: false },
+          mutations: {
+            retry: 0,
+          },
         },
-      }),
+      })
   );
 
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  );
 }

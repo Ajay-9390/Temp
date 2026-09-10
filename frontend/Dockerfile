@@ -1,31 +1,44 @@
-# ---- Dependencies ----
+# ─── Stage 1: Dependencies ───────────────────────────────────────────────────
 FROM node:20-alpine AS deps
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci
 
-# ---- Build ----
-FROM node:20-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --frozen-lockfile
+
+# ─── Stage 2: Builder ────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# NEXT_PUBLIC_* vars are baked at build time (they run in the browser). Pass a
-# browser-reachable backend URL here (defaults to the backend published port).
-ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
-ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_API_URL=http://backend:8080
 RUN npm run build
 
-# ---- Runtime (Next.js standalone) ----
+# ─── Stage 3: Runtime ────────────────────────────────────────────────────────
 FROM node:20-alpine AS runtime
+
 WORKDIR /app
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
-COPY --from=build /app/public ./public
-COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Next.js standalone output — self-contained server
+COPY --from=builder --chown=appuser:appgroup /app/.next/standalone ./
+COPY --from=builder --chown=appuser:appgroup /app/.next/static ./.next/static
+# public/ must exist in the build context (ensured by public/.gitkeep)
+COPY --from=builder --chown=appuser:appgroup /app/public ./public
+
+USER appuser
+
 EXPOSE 3000
-USER nextjs
-ENV PORT=3000 HOSTNAME=0.0.0.0
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD wget -qO- http://localhost:3000/ || exit 1
+
 CMD ["node", "server.js"]

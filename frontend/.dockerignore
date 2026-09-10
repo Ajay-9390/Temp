@@ -1,6 +1,7 @@
 node_modules/
 .next/
-out/
+.git/
+*.md
 playwright-report/
 test-results/
-.git/
+e2e/

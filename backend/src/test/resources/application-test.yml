@@ -1,15 +1,26 @@
 spring:
   jpa:
+    show-sql: true
     hibernate:
       ddl-auto: validate
-  cache:
-    type: simple
-app:
-  security:
-    enabled: false
-  seed:
-    enabled: false
+  flyway:
+    enabled: true
+
+# Use mock providers during integration tests
+  profiles:
+    active: default
+
 logging:
   level:
-    org.testcontainers: INFO
-    com.example.nba: INFO
+    com.nba.attainment: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+
+attainment:
+  calculation:
+    default-method: WEIGHTED
+    default-version: "v1"
+  thresholds:
+    excellent: 75.0
+    good: 60.0
+    needs-improvement: 0.0

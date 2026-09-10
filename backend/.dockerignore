@@ -1,4 +1,6 @@
 target/
-.idea/
-*.iml
-.git/
+*.log
+.git
+.gitignore
+*.md
+.mvn/wrapper/maven-wrapper.jar

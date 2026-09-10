@@ -1,21 +1,25 @@
-# Backend
+# ── Backend ──────────────────────────────────────────────────────────────────
 backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
 *.class
+*.jar
+*.war
+*.ear
 
-# Frontend
+# ── Frontend ──────────────────────────────────────────────────────────────────
 frontend/node_modules/
 frontend/.next/
 frontend/out/
+frontend/.env.local
 frontend/playwright-report/
 frontend/test-results/
 
-# Env / secrets
-.env
-*.local
-
-# IDE / OS
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
 .idea/
-.vscode/
 *.iml
+.vscode/
 .DS_Store
 Thumbs.db
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+*.log
